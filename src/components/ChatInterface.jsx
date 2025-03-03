@@ -5,18 +5,37 @@ import io from "socket.io-client";
 import { addMessage } from "../redux/features/chatSlice";
 import { API_URL_new } from "../Endpoints/baseurl";
 import axios from "axios";
+import { FaBars, FaTimes, FaPlus, FaSignOutAlt, FaPhone, FaEllipsisV, FaPaperPlane } from "react-icons/fa";
+
+// Custom Alert Component
+const Alert = ({ message, type, onClose }) => {
+  const bgColor = type === "error" ? "bg-[#D99D81]" : "bg-[#FFE8B6]"; // Error: Peach, Success: Light Yellow
+  const textColor = "text-[#5B913B]"; // Dark Green for text
+  const borderColor = "border-[#77B254]"; // Light Green for border
+
+  return (
+    <div
+      className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${bgColor} ${textColor} ${borderColor} border flex items-center justify-between w-80 animate-fade-in`}
+    >
+      <span>{message}</span>
+      <button onClick={onClose} className="ml-4 text-[#5B913B] hover:text-[#77B254]">
+        <FaTimes size={16} />
+      </button>
+    </div>
+  );
+};
 
 const ChatInterface = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messageText, setMessageText] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [alert, setAlert] = useState(null); // State for alert
   const messages = useSelector((state) => state.chat.messages);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const socket = io(API_URL_new);
-
-  // Fetch current user's phone from token or localStorage (assuming it's stored)
-  const phone = localStorage.getItem("phone") || ""; // Adjust based on how you store it
+  const phone = localStorage.getItem("phone") || "";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -51,14 +70,18 @@ const ChatInterface = () => {
       const response = await axios.get(`${API_URL_new}/api/users`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      setUsers(response.data.filter((user) => user.phone !== phone)); // Exclude current user
+      setUsers(response.data.filter((user) => user.phone !== phone));
     } catch (error) {
       console.error("Error fetching users:", error);
+      setAlert({ message: "Failed to fetch users. Please try again.", type: "error" });
     }
   };
 
   const handleSend = async () => {
-    if (!messageText.trim() || !selectedUser) return;
+    if (!messageText.trim() || !selectedUser) {
+      setAlert({ message: "Please type a message and select a user.", type: "error" });
+      return;
+    }
 
     const room = [phone, selectedUser._id].sort().join("-");
     const message = {
@@ -75,64 +98,106 @@ const ChatInterface = () => {
       socket.emit("chatMessage", message);
       dispatch(addMessage(message));
       setMessageText("");
+      setAlert({ message: "Message sent successfully!", type: "success" });
     } catch (error) {
       console.error("Error sending message:", error);
+      setAlert({ message: "Failed to send message. Try again.", type: "error" });
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("phone"); // Clear phone if stored
+    localStorage.removeItem("phone");
     navigate("/login");
   };
 
+  const closeAlert = () => setAlert(null);
+
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar: User List */}
-      <div className="w-1/3 bg-white shadow-lg flex flex-col border-r border-gray-200">
-        <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-          <h2 className="text-xl font-bold">Chat Users</h2>
+    <div className="flex h-screen bg-gray-100 font-sans relative">
+      {/* Alert Display */}
+      {alert && <Alert message={alert.message} type={alert.type} onClose={closeAlert} />}
+
+      {/* Sidebar Toggle Button for Mobile */}
+      <button
+        className="fixed top-4 left-4 z-50 md:hidden bg-teal-600 text-white p-2 rounded-full hover:bg-teal-700 transition"
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+      >
+        {isSidebarOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+      </button>
+
+      {/* Left Sidebar */}
+      <div
+        className={`fixed md:static inset-y-0 left-0 w-80 bg-white shadow-lg transform ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0 transition-transform duration-300 ease-in-out z-40 flex flex-col`}
+      >
+        {/* Sidebar Header */}
+        <div className="p-4 bg-teal-600 text-white flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Chats</h2>
+          <div className="flex space-x-3">
+            <button className="p-2 hover:bg-teal-700 rounded-full transition">
+              <FaPlus size={18} className="text-yellow-300" title="New Chat" />
+            </button>
+            <button onClick={handleLogout} className="p-2 hover:bg-teal-700 rounded-full transition">
+              <FaSignOutAlt size={18} className="text-red-300" title="Logout" />
+            </button>
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
+
+        {/* User List */}
+        <div className="flex-1 overflow-y-auto bg-gray-50">
           {users.length > 0 ? (
             users.map((user) => (
               <div
                 key={user._id}
-                className={`flex items-center p-3 mb-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                  selectedUser?._id === user._id
-                    ? "bg-blue-500 text-white shadow-md"
-                    : "bg-gray-50 hover:bg-gray-100"
+                className={`p-4 flex items-center cursor-pointer border-b border-gray-200 hover:bg-teal-50 transition ${
+                  selectedUser?._id === user._id ? "bg-teal-100" : ""
                 }`}
-                onClick={() => setSelectedUser(user)}
+                onClick={() => {
+                  setSelectedUser(user);
+                  setIsSidebarOpen(false);
+                }}
               >
-                <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center text-blue-600 font-semibold mr-3">
+                <div className="w-12 h-12 rounded-full bg-teal-200 flex items-center justify-center text-teal-700 font-semibold mr-3">
                   {user.phone.slice(0, 2)}
                 </div>
-                <span className="font-medium">{user.phone}</span>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-800">{user.phone}</p>
+                  <p className="text-sm text-gray-500 truncate">Last message preview...</p>
+                </div>
               </div>
             ))
           ) : (
-            <p className="text-gray-500 text-center mt-4">
-              No users available. Invite someone to chat!
-            </p>
+            <p className="text-gray-500 text-center mt-4">No chats yet</p>
           )}
         </div>
-        <button
-          className="m-4 bg-red-500 text-white py-2 px-6 rounded-lg hover:bg-red-600 transition-all duration-200 shadow-md"
-          onClick={handleLogout}
-        >
-          Logout
-        </button>
       </div>
 
       {/* Chat Window */}
       <div className="flex-1 flex flex-col">
         {selectedUser ? (
           <>
-            <div className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold shadow-md">
-              Chatting with {selectedUser.phone}
+            {/* Chat Header */}
+            <div className="p-4 bg-teal-600 text-white flex items-center justify-between shadow-md">
+              <div className="flex items-center">
+                <div className="w-10 h-10 rounded-full bg-teal-200 flex items-center justify-center text-teal-700 font-semibold mr-3">
+                  {selectedUser.phone.slice(0, 2)}
+                </div>
+                <h3 className="font-semibold">{selectedUser.phone}</h3>
+              </div>
+              <div className="flex space-x-3">
+                <button className="p-2 hover:bg-teal-700 rounded-full transition">
+                  <FaPhone size={18} className="text-green-300" title="Call" />
+                </button>
+                <button className="p-2 hover:bg-teal-700 rounded-full transition">
+                  <FaEllipsisV size={18} className="text-gray-200" title="More" />
+                </button>
+              </div>
             </div>
-            <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
+
+            {/* Messages Area */}
+            <div className="flex-1 p-4 overflow-y-auto bg-gray-100 bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat">
               {messages
                 .filter(
                   (msg) =>
@@ -147,37 +212,42 @@ const ChatInterface = () => {
                     }`}
                   >
                     <div
-                      className={`max-w-xs p-3 rounded-lg shadow ${
+                      className={`max-w-xs p-3 rounded-lg shadow-md ${
                         msg.sender === phone
-                          ? "bg-blue-500 text-white"
+                          ? "bg-teal-500 text-white"
                           : "bg-white text-gray-800"
                       }`}
                     >
                       {msg.text}
+                      <span className="text-xs block mt-1 opacity-70">
+                        {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
                     </div>
                   </div>
                 ))}
             </div>
-            <div className="p-4 bg-white border-t border-gray-200 flex items-center">
+
+            {/* Message Input */}
+            <div className="p-4 bg-white border-t border-gray-200 flex items-center space-x-3">
               <input
                 type="text"
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-1 p-3 rounded-l-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                placeholder="Type a message"
+                className="flex-1 p-3 rounded-full bg-gray-100 border-none focus:ring-2 focus:ring-teal-500 outline-none text-gray-800"
                 onKeyPress={(e) => e.key === "Enter" && handleSend()}
               />
               <button
-                className="bg-blue-600 text-white px-6 py-3 rounded-r-lg hover:bg-blue-700 transition-all duration-200"
+                className="bg-teal-500 text-white p-3 rounded-full hover:bg-teal-600 transition"
                 onClick={handleSend}
               >
-                Send
+                <FaPaperPlane size={18} className="text-white" />
               </button>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-50 text-gray-500">
-            <p>Select a user to start chatting</p>
+          <div className="flex-1 flex items-center justify-center bg-gray-200 text-gray-500">
+            <p>Select a chat to start messaging</p>
           </div>
         )}
       </div>

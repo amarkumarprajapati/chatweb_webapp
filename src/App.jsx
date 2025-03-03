@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import SplashScreen from "./components/SplashScreen";
-import LoginForm from "./components/LoginForm";
 import SuccessPage from "./components/SuccessPage";
 import ChatInterface from "./components/ChatInterface";
+import LoginForm from "./pages/LoginForm";
 
 const App = () => {
   const [appState, setAppState] = useState({
