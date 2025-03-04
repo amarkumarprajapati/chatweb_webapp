@@ -3,14 +3,11 @@ import { motion } from "framer-motion";
 import { FaTimes, FaExclamationCircle, FaCheckCircle } from "react-icons/fa";
 
 const CustomAlert = ({ message, type, onClose, title, subtitle }) => {
-  // Define colors and styles based on type
   const bgColor = type === "error" ? "bg-red-600" : "bg-white";
   const textColor = type === "error" ? "text-white" : "text-red-600";
   const iconColor = type === "error" ? "text-white" : "text-red-600";
   const borderColor = type === "error" ? "border-red-800" : "border-red-400";
   const icon = type === "error" ? <FaExclamationCircle /> : <FaCheckCircle />;
-
-  // Animation variants
   const alertVariants = {
     hidden: { opacity: 0, y: "-50%", scale: 0.9 },
     visible: {
@@ -28,16 +25,14 @@ const CustomAlert = ({ message, type, onClose, title, subtitle }) => {
 
   return (
     <>
-      {/* Background Blur Overlay */}
       <motion.div
         className="fixed inset-0 backdrop-blur-lg z-40"
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.8 }}
         exit={{ opacity: 0 }}
-        onClick={onClose} // Close alert when clicking the background
+        onClick={onClose}
       />
 
-      {/* Alert Box */}
       <motion.div
         className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
         z-50 p-8 rounded-2xl shadow-xl ${bgColor} ${textColor} ${borderColor} 
@@ -47,26 +42,25 @@ const CustomAlert = ({ message, type, onClose, title, subtitle }) => {
         animate="visible"
         exit="exit"
       >
-        {/* Icon */}
         <div className={`mb-4 ${iconColor}`}>
           {icon}
-          <span className="sr-only">{type === "error" ? "Error" : "Success"}</span>
+          <span className="sr-only">
+            {type === "error" ? "Error" : "Success"}
+          </span>
         </div>
 
-        {/* Title */}
         {title && (
           <h2 className="text-2xl font-bold mb-2 text-center">{title}</h2>
         )}
 
-        {/* Message */}
         <span className="text-lg font-medium text-center">{message}</span>
 
-        {/* Subtitle/Additional Info */}
         {subtitle && (
-          <span className="mt-2 text-sm opacity-80 text-center">{subtitle}</span>
+          <span className="mt-2 text-sm opacity-80 text-center">
+            {subtitle}
+          </span>
         )}
 
-        {/* Close Button */}
         <button
           onClick={onClose}
           className={`mt-6 ${textColor} hover:opacity-70 transition-opacity 

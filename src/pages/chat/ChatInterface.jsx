@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import io from "socket.io-client";
-import { addMessage } from "../redux/features/chatSlice";
-import { API_URL_new } from "../Endpoints/baseurl";
+import { addMessage } from "../../redux/features/chatSlice";
+import { API_URL_new } from "../../Endpoints/baseurl";
 import axios from "axios";
 import { FaBars, FaTimes, FaPlus, FaSignOutAlt, FaPhone, FaEllipsisV, FaPaperPlane } from "react-icons/fa";
 

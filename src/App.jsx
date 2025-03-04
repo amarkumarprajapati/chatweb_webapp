@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, lazy, Suspense } from "react";
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import SplashScreen from "./components/SplashScreen";
-import SuccessPage from "./components/SuccessPage";
-import ChatInterface from "./components/ChatInterface";
-import LoginForm from "./pages/LoginForm";
+
+
+const SuccessPage = lazy(() => import("./components/SuccessPage"));
+const ChatInterface = lazy(() => import("./pages/chat/ChatInterface"));
+const LoginForm = lazy(() => import("./pages/Loginpage/LoginForm"));
+const Home = lazy(() => import("./pages/Home/Home"));
 
 const App = () => {
   const [appState, setAppState] = useState({
@@ -13,22 +16,20 @@ const App = () => {
     showSplash: true,
     loginSuccess: false,
   });
+
   const navigate = useNavigate();
 
-  // Check token on mount and after splash screen
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (token && !appState.showSplash) {
-      // If user is already logged in, skip splash and go to chat
       setAppState((prev) => ({ ...prev, loginSuccess: true }));
       navigate("/chat");
     } else if (appState.showSplash) {
-      // Show splash screen, then redirect to login if not authenticated
       const timer = setTimeout(() => {
         setAppState((prev) => ({ ...prev, showSplash: false }));
-        navigate(token ? "/chat" : "/login");
-      }, 3000); 
+        navigate(token ? "/chat" : "/home");
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [appState.showSplash, navigate]);
@@ -43,26 +44,26 @@ const App = () => {
       }}
     >
       <AnimatePresence mode="wait">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              appState.showSplash ? (
-                <SplashScreen />
-              ) : appState.loginSuccess || localStorage.getItem("token") ? (
-                <Navigate to="/chat" />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route path="/login" element={<LoginForm />} />
-          <Route
-            path="/success"
-            element={<SuccessPage handleEnterChat={() => navigate("/chat")} />}
-          />
-          <Route path="/chat" element={<ChatInterface />} />
-        </Routes>
+        <Suspense fallback={<div className="text-center mt-20">Loading...</div>}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                appState.showSplash ? (
+                  <SplashScreen />
+                ) : appState.loginSuccess || localStorage.getItem("token") ? (
+                  <Navigate to="/chat" />
+                ) : (
+                  <Navigate to="/home" />
+                )
+              }
+            />
+            <Route path="/home" element={<Home />} />
+            <Route path="/login" element={<LoginForm />} />
+            <Route path="/success" element={<SuccessPage />} />
+            <Route path="/chat" element={<ChatInterface />} />
+          </Routes>
+        </Suspense>
       </AnimatePresence>
     </div>
   );
