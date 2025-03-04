@@ -3,15 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_URL_new } from "../../Endpoints/baseurl";
-import CustomAlert from "../../components/CutomAlert/CutomAlert"; // Note: "CutomAlert" seems to be a typo
+import CustomAlert from "../../components/CutomAlert/CutomAlert"; 
 
-const API_URL = API_URL_new;
+
 
 const LoginForm = () => {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [alert, setAlert] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); // Changed to false initially
+  const [isLoading, setIsLoading] = useState(false); 
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -19,7 +19,7 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/login`, { phone, otp });
+      const response = await axios.post(`${API_URL_new}/api/login`, { phone, otp });
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("phone", phone);
 

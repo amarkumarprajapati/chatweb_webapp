@@ -2,6 +2,7 @@ import React, { useEffect, useState, lazy, Suspense } from "react";
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import SplashScreen from "./components/SplashScreen";
+import UserDetails from "./pages/Userdetails/UserDetails";
 
 
 const SuccessPage = lazy(() => import("./components/SuccessPage"));
@@ -62,6 +63,7 @@ const App = () => {
             <Route path="/login" element={<LoginForm />} />
             <Route path="/success" element={<SuccessPage />} />
             <Route path="/chat" element={<ChatInterface />} />
+            <Route path="/register" element={<UserDetails/>} />
           </Routes>
         </Suspense>
       </AnimatePresence>

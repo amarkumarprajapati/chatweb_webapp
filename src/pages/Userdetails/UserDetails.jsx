@@ -1,11 +1,10 @@
-// pages/UserDetails.js
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_URL_new } from "../../Endpoints/baseurl";
 
-const API_URL = API_URL_new;
+
 
 const UserDetails = () => {
   const [firstName, setFirstName] = useState("");
@@ -17,7 +16,7 @@ const UserDetails = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${API_URL}/api/update-profile`,
+        `${API_URL_new}/api/update-profile`,
         { firstName, lastName },
         {
           headers: {
